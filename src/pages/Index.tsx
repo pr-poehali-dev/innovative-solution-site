@@ -1,11 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
+import { LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('hero');
+  const [scrollY, setScrollY] = useState(0);
+  const [animatedBalance, setAnimatedBalance] = useState(0);
+  const [animatedInvestment, setAnimatedInvestment] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const balanceTimer = setInterval(() => {
+      setAnimatedBalance(prev => {
+        if (prev < 124500) return Math.min(prev + 2500, 124500);
+        return prev;
+      });
+    }, 20);
+    
+    const investmentTimer = setInterval(() => {
+      setAnimatedInvestment(prev => {
+        if (prev < 45800) return Math.min(prev + 1000, 45800);
+        return prev;
+      });
+    }, 20);
+
+    return () => {
+      clearInterval(balanceTimer);
+      clearInterval(investmentTimer);
+    };
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -32,6 +63,30 @@ const Index = () => {
     { name: 'Акции', value: 22400, percentage: 48.9, change: '+15.2%' },
     { name: 'Облигации', value: 13700, percentage: 29.9, change: '+8.1%' },
     { name: 'ETF', value: 9700, percentage: 21.2, change: '+12.7%' },
+  ];
+
+  const portfolioChartData = [
+    { name: 'Акции', value: 22400, color: '#0EA5E9' },
+    { name: 'Облигации', value: 13700, color: '#8B5CF6' },
+    { name: 'ETF', value: 9700, color: '#D946EF' },
+  ];
+
+  const growthChartData = [
+    { month: 'Янв', value: 32000 },
+    { month: 'Фев', value: 35200 },
+    { month: 'Мар', value: 38500 },
+    { month: 'Апр', value: 41200 },
+    { month: 'Май', value: 43800 },
+    { month: 'Июн', value: 45800 },
+  ];
+
+  const cashFlowData = [
+    { month: 'Янв', income: 14800, expenses: 8200 },
+    { month: 'Фев', income: 15100, expenses: 8600 },
+    { month: 'Мар', income: 14900, expenses: 8400 },
+    { month: 'Апр', income: 15300, expenses: 8900 },
+    { month: 'Май', income: 15000, expenses: 8700 },
+    { month: 'Июн', income: 15200, expenses: 8750 },
   ];
 
   const pricingPlans = [
@@ -131,13 +186,13 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 mb-12">
-            <Card className="p-8 glass-effect border-border hover:border-primary transition-all">
+            <Card className="p-8 glass-effect border-border hover:border-primary transition-all hover:scale-105 duration-300">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-sm text-muted-foreground">Общий баланс</p>
-                  <h3 className="text-4xl font-bold mt-1">{financialData.totalBalance.toLocaleString('ru-RU')} ₽</h3>
+                  <h3 className="text-4xl font-bold mt-1">{animatedBalance.toLocaleString('ru-RU')} ₽</h3>
                 </div>
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
                   <Icon name="Wallet" className="text-primary" size={32} />
                 </div>
               </div>
@@ -153,13 +208,13 @@ const Index = () => {
               </div>
             </Card>
 
-            <Card className="p-8 glass-effect border-border hover:border-secondary transition-all">
+            <Card className="p-8 glass-effect border-border hover:border-secondary transition-all hover:scale-105 duration-300">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-sm text-muted-foreground">Инвестиции</p>
-                  <h3 className="text-4xl font-bold mt-1">{financialData.investmentValue.toLocaleString('ru-RU')} ₽</h3>
+                  <h3 className="text-4xl font-bold mt-1">{animatedInvestment.toLocaleString('ru-RU')} ₽</h3>
                 </div>
-                <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center animate-pulse">
                   <Icon name="TrendingUp" className="text-secondary" size={32} />
                 </div>
               </div>
@@ -171,51 +226,98 @@ const Index = () => {
             </Card>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="p-8 glass-effect border-border">
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <Card className="p-8 glass-effect border-border hover:border-primary transition-all">
               <h4 className="text-xl font-semibold mb-6 flex items-center gap-2">
                 <Icon name="PieChart" className="text-primary" size={24} />
                 Категории расходов
               </h4>
-              <div className="space-y-4">
+              <div className="h-64 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={portfolioChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {portfolioChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ background: 'rgba(26, 31, 44, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                      formatter={(value: any) => `${value.toLocaleString('ru-RU')} ₽`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2 mt-4">
                 {categories.map((category, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between mb-2">
+                  <div key={index} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }}></div>
                       <span className="text-sm">{category.name}</span>
-                      <span className="text-sm font-semibold">{category.amount.toLocaleString('ru-RU')} ₽</span>
                     </div>
-                    <Progress value={category.percentage} className="h-2" style={{ '--progress-background': category.color } as any} />
+                    <span className="text-sm font-semibold">{category.amount.toLocaleString('ru-RU')} ₽</span>
                   </div>
                 ))}
               </div>
             </Card>
 
-            <Card className="p-8 glass-effect border-border">
+            <Card className="p-8 glass-effect border-border hover:border-secondary transition-all">
               <h4 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <Icon name="BarChart3" className="text-secondary" size={24} />
-                Инвестиционный портфель
+                <Icon name="TrendingUp" className="text-secondary" size={24} />
+                Рост инвестиций
               </h4>
-              <div className="space-y-6">
-                {investments.map((investment, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium">{investment.name}</span>
-                        <span className="text-sm text-green-400">{investment.change}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Progress value={investment.percentage} className="flex-1 h-2" />
-                        <span className="text-sm text-muted-foreground w-12 text-right">{investment.percentage}%</span>
-                      </div>
-                    </div>
-                    <div className="ml-4 text-right">
-                      <p className="font-semibold">{investment.value.toLocaleString('ru-RU')} ₽</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={growthChartData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                    <XAxis dataKey="month" stroke="#888" />
+                    <YAxis stroke="#888" />
+                    <Tooltip 
+                      contentStyle={{ background: 'rgba(26, 31, 44, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                      formatter={(value: any) => `${value.toLocaleString('ru-RU')} ₽`}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </Card>
           </div>
+
+          <Card className="p-8 glass-effect border-border hover:border-primary transition-all">
+            <h4 className="text-xl font-semibold mb-6 flex items-center gap-2">
+              <Icon name="BarChart3" className="text-primary" size={24} />
+              Денежный поток
+            </h4>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={cashFlowData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="month" stroke="#888" />
+                  <YAxis stroke="#888" />
+                  <Tooltip 
+                    contentStyle={{ background: 'rgba(26, 31, 44, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                    formatter={(value: any) => `${value.toLocaleString('ru-RU')} ₽`}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="income" stroke="#0EA5E9" strokeWidth={3} name="Доходы" />
+                  <Line type="monotone" dataKey="expenses" stroke="#F97316" strokeWidth={3} name="Расходы" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
         </div>
       </section>
 
@@ -244,8 +346,15 @@ const Index = () => {
                 description: 'Получайте персональные рекомендации и автоматические инсайты для роста благосостояния.',
               },
             ].map((step, index) => (
-              <Card key={index} className="p-8 glass-effect border-border hover:border-primary transition-all text-center">
-                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+              <Card 
+                key={index} 
+                className="p-8 glass-effect border-border hover:border-primary transition-all text-center group hover:scale-105 duration-300"
+                style={{ 
+                  transform: `translateY(${scrollY * 0.05 * (index + 1)}px)`,
+                  transition: 'transform 0.1s ease-out'
+                }}
+              >
+                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/40 transition-all group-hover:scale-110">
                   <Icon name={step.icon as any} className="text-primary" size={40} />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">{step.title}</h3>
@@ -265,19 +374,23 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`p-8 glass-effect border-border hover:border-primary transition-all ${plan.popular ? 'ring-2 ring-primary' : ''}`}>
+              <Card 
+                key={index} 
+                className={`p-8 glass-effect border-border hover:border-primary transition-all hover:scale-105 duration-300 ${plan.popular ? 'ring-2 ring-primary scale-105' : ''}`}
+              >
                 {plan.popular && (
-                  <div className="inline-block bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-4">
-                    Популярный
+                  <div className="inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-semibold px-3 py-1 rounded-full mb-4 animate-pulse">
+                    ⭐ Популярный
                   </div>
                 )}
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                 <div className="mb-6">
-                  <span className="text-5xl font-bold">{plan.price}</span>
+                  <span className="text-5xl font-bold gradient-text">{plan.price}</span>
                   {plan.price > 0 && <span className="text-muted-foreground ml-2">₽/мес</span>}
                 </div>
-                <Button className="w-full mb-6" variant={plan.popular ? 'default' : 'outline'}>
+                <Button className="w-full mb-6 group" variant={plan.popular ? 'default' : 'outline'}>
                   {plan.price === 0 ? 'Начать бесплатно' : 'Выбрать план'}
+                  <Icon name="ArrowRight" className="ml-2 group-hover:translate-x-1 transition-transform" size={16} />
                 </Button>
                 <ul className="space-y-3">
                   {plan.features.map((feature, idx) => (
